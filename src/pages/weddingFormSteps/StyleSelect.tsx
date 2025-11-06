@@ -4,7 +4,8 @@ import minimalColorExample from '../../assets/line_simple.png'
 import { useFormContext } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
-type Styles = 'minimal-color' | 'colorful' | null;
+export type Styles = 'minimal-color' | 'colorful' | null;
+
 type StyleOption = {
     src: string,
     name: string,
