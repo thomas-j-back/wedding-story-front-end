@@ -1,6 +1,6 @@
-import { useFormContext } from "react-hook-form";
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
-
+import UploadService from '../services/UploadService';
+import type { CreateUploadDTO } from '../types/dataTypes/DTOs';
 interface UserEditPhotoBlockProps {
     userName: string,
     photoAlt: string,
@@ -15,12 +15,9 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
     const [photoPreview, setPhotoPreview] = useState<string>();
     const [styledPhoto, setStyledPhoto] = useState();
     const inputFileRef = useRef<HTMLInputElement>(null);
+    const uploadService = new UploadService();
 
-    useEffect(() => {
-        // if(inputFileRef.current) {
 
-        // }
-    })
 
     const selectPhoto = () => {
         if (inputFileRef.current) {
@@ -38,16 +35,20 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
         }
     }
 
-    const stylizeImage = () => {
+    const stylizeImage = async () => {
         if (!uploadedPhoto) {
             throw new Error('no photo uploaded to stylize.')
         }
-        warningDialogue();
+        const uploadDTO: CreateUploadDTO = {
+            count: 1,
+            contentType: uploadedPhoto?.type || ''
+        }
+        const uploadResponse = await uploadService.createUpload(uploadDTO);
+        console.log(uploadResponse);
+        const putResponse = await uploadService.putFile(uploadResponse[0].putUrl, uploadedPhoto);
+        console.log(putResponse);
     }
 
-    const warningDialogue = () => {
-
-    }
 
     return (
         <div className='max-w-md mx-auto p-6 bg-white rounded-2xl shadow space-y-6 flex flex-col'>
