@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import UploadService from '../services/UploadService';
-import type { CreateUploadDTO } from '../types/dataTypes/DTOs';
+import type { CreateJobRequestDTO, CreateUploadDTO } from '../types/dataTypes/DTOs';
+import { useFormContext } from 'react-hook-form';
 interface UserEditPhotoBlockProps {
     userName: string,
     photoAlt: string,
@@ -13,9 +14,12 @@ interface UserEditPhotoBlockProps {
 export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhotoBlockProps) {
     const [uploadedPhoto, setUploadedPhoto] = useState<File>();
     const [photoPreview, setPhotoPreview] = useState<string>();
+    const [generatedPreview, setGeneratedPreview] = useState<string>();
     const [styledPhoto, setStyledPhoto] = useState();
     const inputFileRef = useRef<HTMLInputElement>(null);
     const uploadService = new UploadService();
+    const { getValues } = useFormContext();
+    const style = getValues('style');
 
 
 
@@ -46,7 +50,30 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
         const uploadResponse = await uploadService.createUpload(uploadDTO);
         console.log(uploadResponse);
         const putResponse = await uploadService.putFile(uploadResponse[0].putUrl, uploadedPhoto);
-        console.log(putResponse);
+        //Now we have the object ket in uploadResponse[0].objectKey, we can now create a job request
+        const jobRequestDTO: CreateJobRequestDTO = {
+            model: 'stabilityimagemodel',
+            prompt: '',
+            inputKeys: [uploadResponse[0].objectKey, style == "mimimal-color" ? "public/line_simple.png" : "public/full_color.png"],
+            inputContentTypes: [uploadedPhoto?.type, "image/png"],
+            options: {},
+            type: 'STYLE_TRANSFER'
+        }
+        const createdJob = await uploadService.createJobRequest(jobRequestDTO);
+        console.log(createdJob);
+        const i = setInterval(async () => {
+            //check job status
+            const res = await uploadService.getJobStatus(createdJob.jobId);
+            if (res.status == "SUCCEEDED") {
+                clearInterval(i);
+                alert("Picture generated!");
+                setGeneratedPreview(res.outputKeys[0]);
+            }
+            if (res.status == 'FAILED') {
+                clearInterval(i);
+                alert(res.error);
+            }
+        }, 1000);
     }
 
 
@@ -54,6 +81,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
         <div className='max-w-md mx-auto p-6 bg-white rounded-2xl shadow space-y-6 flex flex-col'>
             <label>{userName}</label>
             <img src={photoPreview} alt={photoAlt} />
+            <img src={generatedPreview} alt={"A preview of how your character will look stylized"} />
             <button onClick={selectPhoto} className="text-sm bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50">{uploadedPhoto ? 'Change Photo' : 'Upload Photo'}</button>
             <input accept="image/*" ref={inputFileRef} className="hidden" type="file" onChange={setPhoto} />
             <button disabled={!uploadedPhoto} className={'text-sm bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50'} onClick={stylizeImage}>Generate Character</button>

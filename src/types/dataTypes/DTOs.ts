@@ -3,9 +3,18 @@ export type CreateUploadDTO = {
     contentType: string
 }
 
+
 export type CreateJobRequestDTO = {
     model: string,
     prompt: string,
     inputKeys: string[],
-    options: object
+    inputContentTypes: string[],
+    options: object,
+    type: string
 }
+
+export type PresignedUrlDTO = {
+    putUrl: string,
+    objectKey: string,
+}
+
