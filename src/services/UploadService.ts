@@ -54,4 +54,24 @@ export default class UploadService {
         });
         return response.json();
     }
+
+    public async requestPresignGet(key: string) {
+        const job = {
+            model: '',
+            prompt: '',
+            inputKeys: [key],
+            inputContentTypes: [],
+            options: {},
+            type: 'PRESIGN_GET_FROM_KEY'
+        } as CreateJobRequestDTO 
+        const response = await fetch(`${this.baseUrl}/api/jobs`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': import.meta.env.VITE_GENERATION_API_KEY || ''
+            },
+            body: JSON.stringify(job)
+        });
+        return response.json();
+    }
 }

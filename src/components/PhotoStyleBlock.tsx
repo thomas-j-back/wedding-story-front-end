@@ -2,25 +2,43 @@ import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import UploadService from '../services/UploadService';
 import type { CreateJobRequestDTO, CreateUploadDTO } from '../types/dataTypes/DTOs';
 import { useFormContext } from 'react-hook-form';
+import type { StyledPhotoState } from '../validation/weddingDetails';
 interface UserEditPhotoBlockProps {
     userName: string,
     photoAlt: string,
     //we want the user to have their progress/ session saved while using
-    userUploadedPhoto?: File,
-    styledPhoto?: File,
-    numberRestyles?: number
+    fieldPath: 'requesterCharacterPhoto' | 'partnerCharacterPhoto'
 }
 
-export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhotoBlockProps) {
+export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: UserEditPhotoBlockProps) {
     const [uploadedPhoto, setUploadedPhoto] = useState<File>();
     const [photoPreview, setPhotoPreview] = useState<string>();
     const [generatedPreview, setGeneratedPreview] = useState<string>();
-    const [styledPhoto, setStyledPhoto] = useState();
     const inputFileRef = useRef<HTMLInputElement>(null);
     const uploadService = new UploadService();
-    const { getValues } = useFormContext();
+    const { getValues, watch, setValue } = useFormContext();
     const style = getValues('style');
 
+
+    // get the current photo state
+    const photoState = watch(fieldPath) as StyledPhotoState;
+
+    useEffect(() => {
+        if (photoState?.generatedUrl) {
+            setGeneratedPreview(photoState.generatedUrl);
+        }
+        if (photoState?.initPhotoKey) {
+            //Retrieve and show the image
+            //some dummy function to get image
+            getPhoto(photoState.initPhotoKey);
+        }
+    }, [photoState?.generatedUrl]);
+
+
+    const getPhoto = async (key: string) => {
+        const getUrl = await uploadService.requestPresignGet(key);
+        setPhotoPreview(getUrl);
+    }
 
 
     const selectPhoto = () => {
@@ -48,8 +66,12 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
             contentType: uploadedPhoto?.type || ''
         }
         const uploadResponse = await uploadService.createUpload(uploadDTO);
-        console.log(uploadResponse);
-        const putResponse = await uploadService.putFile(uploadResponse[0].putUrl, uploadedPhoto);
+        await uploadService.putFile(uploadResponse[0].putUrl, uploadedPhoto);
+
+        //Store the origin photo details for next load
+        setValue(`${fieldPath}.initPhotoKey`, uploadResponse[0].objectKey);
+        setValue(`${fieldPath}.initPhotoContentType`, uploadedPhoto?.type || "image/*")
+
         //Now we have the object ket in uploadResponse[0].objectKey, we can now create a job request
         const jobRequestDTO: CreateJobRequestDTO = {
             model: 'stabilityimagemodel',
@@ -60,20 +82,34 @@ export default function UserPhotoEditBlock({ userName, photoAlt }: UserEditPhoto
             type: 'STYLE_TRANSFER'
         }
         const createdJob = await uploadService.createJobRequest(jobRequestDTO);
-        console.log(createdJob);
+
+        setValue(`${fieldPath}.jobId`, createdJob.jobId);
+
+        //Query job service intermittently to get status
+        let tries = 0;
         const i = setInterval(async () => {
-            //check job status
-            const res = await uploadService.getJobStatus(createdJob.jobId);
+            //check job status of the jobId we just initiated
+            const res = await uploadService.getJobStatus(getValues(`${fieldPath}.jobId`));
+            tries++;
             if (res.status == "SUCCEEDED") {
                 clearInterval(i);
-                alert("Picture generated!");
+                //Store key of generated character image
+                setValue(`${fieldPath}.generatedKey`, res.outputKeys[0]);
+                setValue(`${fieldPath}.generatedUrl`, res.outputUrls[0]);
+
                 setGeneratedPreview(res.outputKeys[0]);
             }
             if (res.status == 'FAILED') {
                 clearInterval(i);
                 alert(res.error);
             }
-        }, 1000);
+            if (tries > 10) {
+                clearInterval(i);
+                console.error("Unable to communicate with job server on status.")
+                photoState.jobId = '';
+                setValue(`${fieldPath}.jobId`, '');
+            }
+        }, 5000);
     }
 
 

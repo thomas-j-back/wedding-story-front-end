@@ -1,13 +1,17 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import { FormProvider, useForm } from 'react-hook-form';
-import { WeddingDetailsSchema, type WeddingDetailsFormData, STEP_FIELDS } from '../validation/weddingDetails';
+import { WeddingDetailsSchema, type WeddingDetailsFormData } from '../validation/weddingDetails';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 export default function WeddingForm() {
-    type StepKey = 'basicDetails' | 'style' | 'chapter1';
-    const STEPS: StepKey[] = ["basicDetails", 'style', 'chapter1'];
+    type StepKey = 'basicDetails' | 'style' | 'chapter1' | 'characterPhotos';
+    const STEPS: StepKey[] = ["basicDetails", 'style', 'chapter1', 'characterPhotos'];
     const methods = useForm<WeddingDetailsFormData>({
         resolver: zodResolver(WeddingDetailsSchema),
+        defaultValues: {
+            requesterCharacterPhoto: {},
+            partnerCharacterPhoto: {},
+        },
         mode: 'onSubmit'
     });
 
