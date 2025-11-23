@@ -1,4 +1,4 @@
-import type { CreateJobRequestDTO, CreateUploadDTO, PresignedUrlDTO } from "../types/dataTypes/DTOs";
+import type { CreateJobRequestDTO, CreateUploadDTO, JobCreateResponse, JobStatusResponseDTO, PresignedUrlDTO } from "../types/dataTypes/DTOs";
 export default class UploadService {
     private baseUrl: string;
     //have some vars for the auth key
@@ -41,7 +41,7 @@ export default class UploadService {
             },
             body: JSON.stringify(jobRequestDTO),
         });
-        return response.json();
+        return response.json() as Promise<JobCreateResponse>;
     }
 
     public async getJobStatus(jobId: string) {
@@ -52,25 +52,18 @@ export default class UploadService {
                 'X-API-Key': import.meta.env.VITE_GENERATION_API_KEY || ''
             }
         });
-        return response.json();
+        return response.json() as Promise<JobStatusResponseDTO>;
     }
 
     public async requestPresignGet(key: string) {
-        const job = {
-            model: '',
-            prompt: '',
-            inputKeys: [key],
-            inputContentTypes: [],
-            options: {},
-            type: 'PRESIGN_GET_FROM_KEY'
-        } as CreateJobRequestDTO 
-        const response = await fetch(`${this.baseUrl}/api/jobs`, {
+       const req = {key}
+        const response = await fetch(`${this.baseUrl}/api/presign/get`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': import.meta.env.VITE_GENERATION_API_KEY || ''
             },
-            body: JSON.stringify(job)
+            body: JSON.stringify(req)
         });
         return response.json();
     }
