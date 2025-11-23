@@ -42,6 +42,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
     }, [photoState?.generatedUrl, uploadedPhoto]);
 
 
+    //Grab photo from presigned geturl
     const getPhoto = async (key: string) => {
         const res = await uploadService.requestPresignGet(key);
         setPhotoPreview(res.getUrl);
