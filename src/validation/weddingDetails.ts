@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const SubmissionTypeSchema = z
+  .enum(['single-image', 'separate-images'])
+  .nullable();
+
+export type SubmissionTypes = z.infer<typeof SubmissionTypeSchema>;
 
 export const styledPhotoSchema = z.object({
     initPhotoKey: z.string().optional(),          // key in R2/S3
@@ -16,6 +21,7 @@ export const WeddingDetailsSchema = z.object({
     requesterName: z.string().min(1, "You must enter your first name."),
     partnerName: z.string().min(1, "You must enter your partner's name"),
     style: z.enum(['colorful', 'minimal-color']),
+    photoSubmissionType: SubmissionTypeSchema,
     requesterCharacterPhoto: styledPhotoSchema.optional(),
     partnerCharacterPhoto: styledPhotoSchema.optional(),
     chapter1: z.string().min(1),

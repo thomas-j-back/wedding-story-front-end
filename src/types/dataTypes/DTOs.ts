@@ -17,14 +17,15 @@ export type CreateUploadDTO = {
     contentType: string
 }
 
+type Models = 'stabilityimagemodel' | 'openapiimmagemodel'
 
 export type CreateJobRequestDTO = {
-    model: string,
+    model: Models,
     prompt: string,
     inputKeys: string[],
     inputContentTypes: string[],
     options: object,
-    type: string
+    generationType: string
 }
 
 export type PresignedUrlDTO = {
