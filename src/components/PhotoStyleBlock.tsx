@@ -29,9 +29,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
         if (photoState?.generatedUrl) {
             setGeneratedPreview(photoState.generatedUrl);
         }
-        if (photoState?.initPhotoKey) {
-            debugger;
-            //Retrieve and show the image
+        if (photoState?.initPhotoKey) {         //Retrieve and show the image
             //some dummy function to get image
             getPhoto(photoState.initPhotoKey);
         }
@@ -56,15 +54,18 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
     }
 
     const setPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+        debugger;
         const files = e.target.files;
         if (files && files[0]) {
-            const fileURL = URL.createObjectURL(files[0]);
-            setPhotoPreview(fileURL);
-            setUploadedPhoto(files[0]);
+
+            await storeUserInitPhoto(files[0])
+
+
         }
     }
 
-    const storeUserInitPhoto = async () => {
+    const storeUserInitPhoto = async (uploadedPhoto: File) => {
+        const fileURL = URL.createObjectURL(uploadedPhoto);
         const res = confirm("Upload this photo to store for future iterations on character design?");
         if (!res) {
             return;
@@ -84,6 +85,9 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
             //Store the origin photo details for next load
             setValue(`${fieldPath}.initPhotoKey`, uploadResponse[0].objectKey);
             setValue(`${fieldPath}.initPhotoContentType`, uploadedPhoto?.type || "image/*");
+
+            setPhotoPreview(fileURL);
+
         } catch (e) {
             console.error(e);
         }
@@ -100,7 +104,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
 
         //Now we have the object ket in uploadResponse[0].objectKey, we can now create a job request
         const jobRequestDTO: CreateJobRequestDTO = {
-            model: 'stabilityimagemodel',
+            model: 'openaiimagemodel',
             prompt: '',
             inputKeys: [initPhotoKey, style == "mimimal-color" ? "public/line_simple.png" : "public/full_color.png"],
             inputContentTypes: [initPhotoContentType, "image/png"],
@@ -129,15 +133,18 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
             if (res.status == 'FAILED') {
                 clearInterval(i);
                 alert(res.error);
+                setLoading(false);
+
+
             }
-            if (tries > 10) {
+            if (tries > 20) {
                 clearInterval(i);
                 console.error("Unable to communicate with job server on status.")
                 photoState.jobId = '';
                 setValue(`${fieldPath}.jobId`, '');
                 setLoading(false);
             }
-        }, 5000);
+        }, 10000);
     }
 
 
