@@ -22,7 +22,8 @@ export default function WeddingForm() {
     const { reset, watch } = methods;
 
     const onSubmit = () => {
-        //do some stuff idk yet
+        //Save all this to the backend and move on to the relationship story form step
+
     }
 
     // Optional: auto-save to localStorage
@@ -42,6 +43,7 @@ export default function WeddingForm() {
 
     }, [watch, reset]);
 
+    //Loads the local draft from localStorage
     function loadLocalDraft(): WeddingDetailsFormData | null {
         if (typeof window === "undefined") return null; // SSR safety
         const raw = localStorage.getItem(LOCAL_FORM_DATA_KEY);
@@ -61,6 +63,7 @@ export default function WeddingForm() {
             <NavLink to="/form" end className={({ isActive }) => isActive ? 'font-bold' : 'text-gray-200'}>Tell us a bit about yourselves</NavLink>
             <NavLink to="style_select" className={({ isActive }) => isActive ? 'font-bold' : 'text-gray-200'}>Select a Style</NavLink>
             <NavLink to="couple_style" className={({ isActive }) => isActive ? 'font-bold' : 'text-gray-200'}>Upload and style you and your partner</NavLink>
+            <NavLink to="relationship_story" className={({ isActive }) => isActive ? 'font-bold' : 'text-gray-200'}>Answer some questions about your relationship history</NavLink>
         </nav>
         <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)}>

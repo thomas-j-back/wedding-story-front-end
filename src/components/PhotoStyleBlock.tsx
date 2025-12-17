@@ -9,9 +9,10 @@ interface UserEditPhotoBlockProps {
     photoAlt: string,
     //we want the user to have their progress/ session saved while using
     fieldPath: 'requesterCharacterPhoto' | 'partnerCharacterPhoto'
+    onAccept: () => void;
 }
 
-export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: UserEditPhotoBlockProps) {
+export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath, onAccept }: UserEditPhotoBlockProps) {
     const [uploadedPhoto, setUploadedPhoto] = useState<File>();
     const [loading, setLoading] = useState<boolean>(false);
     const [photoPreview, setPhotoPreview] = useState<string>();
@@ -26,24 +27,21 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
     const photoState = watch(fieldPath) as StyledPhotoState;
 
     useEffect(() => {
-        if (photoState?.generatedUrl) {
-            setGeneratedPreview(photoState.generatedUrl);
+        if (photoState?.generatedKey) {
+            getPhoto(photoState.generatedKey, setGeneratedPreview);
         }
         if (photoState?.initPhotoKey) {         //Retrieve and show the image
             //some dummy function to get image
-            getPhoto(photoState.initPhotoKey);
+            getPhoto(photoState.initPhotoKey, setPhotoPreview);
         }
-        if (uploadedPhoto && !getValues(`${fieldPath}.initPhotoKey`)) {
-            storeUserInitPhoto();
-        }
-
     }, [photoState?.generatedUrl, uploadedPhoto]);
 
 
     //Grab photo from presigned geturl
-    const getPhoto = async (key: string) => {
+    const getPhoto = async (key: string, setMethod: (url: string) => void) => {
         const res = await uploadService.requestPresignGet(key);
-        setPhotoPreview(res.getUrl);
+        // setPhotoPreview(res.getUrl);
+        setMethod(res.getUrl);
     }
 
 
@@ -54,13 +52,9 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
     }
 
     const setPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
-        debugger;
         const files = e.target.files;
         if (files && files[0]) {
-
             await storeUserInitPhoto(files[0])
-
-
         }
     }
 
@@ -85,7 +79,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
             //Store the origin photo details for next load
             setValue(`${fieldPath}.initPhotoKey`, uploadResponse[0].objectKey);
             setValue(`${fieldPath}.initPhotoContentType`, uploadedPhoto?.type || "image/*");
-
+            setUploadedPhoto(uploadedPhoto);
             setPhotoPreview(fileURL);
 
         } catch (e) {
@@ -147,6 +141,13 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
         }, 10000);
     }
 
+    /**
+     * 
+     */
+    const saveGeneratedImage = () => {
+
+    }
+
 
     return (
         <div className='max-w-md mx-auto p-6 bg-white rounded-2xl shadow space-y-6 flex flex-col'>
@@ -157,6 +158,7 @@ export default function UserPhotoEditBlock({ userName, photoAlt, fieldPath }: Us
             <button onClick={selectPhoto} className="text-sm bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50">{uploadedPhoto ? 'Change Photo' : 'Upload Photo'}</button>
             <input accept="image/*" ref={inputFileRef} className="hidden" type="file" onChange={setPhoto} />
             <button disabled={!uploadedPhoto && !photoState?.initPhotoKey} className={'text-sm bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50'} onClick={stylizeImage}>Generate Character</button>
+            <button className={'text-sm bg-blue-600 text-white px-4 py-2 rounded disabled:cursor-not-allowed disabled:opacity-50'} hidden={!generatedPreview} onClick={onAccept}>Accept Character Style</button>
         </div>
     )
 }

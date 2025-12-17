@@ -2,13 +2,23 @@ import { useFormContext } from "react-hook-form"
 import UserPhotoEditBlock from "../../components/PhotoStyleBlock"
 import type { SubmissionTypes } from "../../validation/weddingDetails";
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 export default function CoupleUpload() {
-    const { getValues } = useFormContext();
+    const { getValues, trigger } = useFormContext();
     const [submissionType, setSubmissionType] = useState<SubmissionTypes>();
     const myName = getValues('requesterName');
     const partnerName = getValues('partnerName');
-
+    const navigate = useNavigate();
+    //Check (if single image, accepting should move forward to next form step, if separate images, accepting should move forward to next form step)
+    const onAccept = async () => {
+        const ok = await trigger();
+        if (ok) {
+            if (submissionType == 'single-image') {
+                navigate('/relationship_story')
+            }
+        }
+    }
 
     return (<>
         <div className='max-w-md mx-auto p-6 bg-white rounded-2xl shadow space-y-6 flex flex-col'>
@@ -27,10 +37,10 @@ export default function CoupleUpload() {
         </div>
         <div className="flex flex-row justify-between">
             {submissionType == 'single-image' ? (
-                <UserPhotoEditBlock userName={`${myName} and ${partnerName}`} photoAlt="Preview of you and your partner" fieldPath="requesterCharacterPhoto" />
+                <UserPhotoEditBlock onAccept={onAccept} userName={`${myName} and ${partnerName}`} photoAlt="Preview of you and your partner" fieldPath="requesterCharacterPhoto" />
             ) : (<>
-                <UserPhotoEditBlock userName={myName} photoAlt="Preview of me" fieldPath="partnerCharacterPhoto" />
-                <UserPhotoEditBlock userName={partnerName} photoAlt="Preview of my partner" fieldPath="partnerCharacterPhoto" />
+                <UserPhotoEditBlock onAccept={onAccept} userName={myName} photoAlt="Preview of me" fieldPath="partnerCharacterPhoto" />
+                <UserPhotoEditBlock onAccept={onAccept} userName={partnerName} photoAlt="Preview of my partner" fieldPath="partnerCharacterPhoto" />
             </>)}
 
 
