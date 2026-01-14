@@ -7,6 +7,7 @@ import WeddingForm from './pages/WeddingForm';
 import BasicDetails from './pages/weddingFormSteps/BasicDetails';
 import StyleSelect from './pages/weddingFormSteps/StyleSelect';
 import CoupleUpload from './pages/weddingFormSteps/CoupleUpload';
+import RelationshipStoryBuild from './pages/relationshipStoryBuild';
 
 function App() {
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="style_select" element={<StyleSelect />} />
         <Route path="couple_style" element={<CoupleUpload />} />
       </Route>
+      <Route path="/relationship_story" element={<RelationshipStoryBuild />} />
     </Routes>
   )
 }
