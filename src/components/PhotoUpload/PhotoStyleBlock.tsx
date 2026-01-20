@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react';
-import UploadService from '../services/UploadService';
-import type { CreateJobRequestDTO, CreateUploadDTO } from '../types/dataTypes/DTOs';
+import UploadService from '../../services/UploadService';
+import type { CreateJobRequestDTO, CreateUploadDTO } from '../../types/dataTypes/DTOs';
 import { useFormContext } from 'react-hook-form';
-import type { StyledPhotoState } from '../validation/weddingDetails';
-import FullScreenLoader from './FullScreenLoading';
+import type { StyledPhotoState } from '../../validation/weddingDetails';
+import FullScreenLoader from '../FullScreenLoading';
 interface UserEditPhotoBlockProps {
     userName: string,
     photoAlt: string,

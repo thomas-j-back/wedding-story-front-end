@@ -1,5 +1,5 @@
 import { useFormContext } from "react-hook-form"
-import UserPhotoEditBlock from "../../components/PhotoStyleBlock"
+import UserPhotoEditBlock from "../../components/PhotoUpload/PhotoStyleBlock"
 import type { SubmissionTypes } from "../../validation/weddingDetails";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
